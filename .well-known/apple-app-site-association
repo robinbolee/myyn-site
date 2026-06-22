@@ -1,0 +1,15 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "9F4XV3V8QY.com.myyn.app",
+        "appIDs": ["9F4XV3V8QY.com.myyn.app"],
+        "paths": ["*"],
+        "components": [
+          { "/": "*" }
+        ]
+      }
+    ]
+  }
+}
