@@ -17,6 +17,7 @@
   h1{font-family:Georgia,serif;font-size:1.55rem;margin:0 0 10px;line-height:1.25;}
   p{color:var(--taupe);font-size:1.05rem;margin:0 0 28px;}
   .btn{display:inline-block;background:var(--coral);color:#fff;text-decoration:none;font-weight:600;padding:15px 30px;border-radius:30px;font-size:1.05rem;}
+  .btn2{display:inline-block;margin-top:14px;color:var(--coral);text-decoration:none;font-weight:600;font-size:.95rem;}
   .note{margin-top:22px;font-size:.85rem;color:var(--taupe);}
   .foot{margin-top:40px;font-size:.8rem;}
   .foot a{color:var(--coral);text-decoration:none;}
@@ -28,13 +29,31 @@
   <div class="cards">🎴</div>
   <h1>Tu as reçu une carte&nbsp;💌</h1>
   <p>Myyn, c'est le jeu de cartes de ta bande : chaque jour tu offres des cartes à tes proches, et tu collectionnes celles que les autres pensent que tu mérites.</p>
-  <a class="btn" href="https://testflight.apple.com/join/nwNd7mZC">Rejoindre Myyn (accès anticipé)</a>
-  <div class="note">Myyn est en accès anticipé via <strong>TestFlight</strong>.<br>Installe l'app TestFlight (gratuite, Apple), puis Myyn.</div>
+  <a class="btn" id="openBtn" href="https://testflight.apple.com/join/nwNd7mZC">Rejoindre Myyn (accès anticipé)</a>
+  <a class="btn2" id="installBtn" href="https://testflight.apple.com/join/nwNd7mZC" style="display:none">Pas encore l'app ? Installer Myyn →</a>
+  <div class="note" id="note">Myyn est en accès anticipé via <strong>TestFlight</strong>.<br>Installe l'app TestFlight (gratuite, Apple), puis Myyn.</div>
   <div class="foot">
     <a href="https://robinbolee.github.io/myyn-legal/confidentialite.html">Confidentialité</a> ·
     <a href="https://robinbolee.github.io/myyn-legal/cgu.html">CGU</a> ·
     <a href="https://robinbolee.github.io/myyn-legal/mentions-legales.html">Mentions légales</a>
   </div>
 </div>
+<script>
+  (function(){
+    var path = window.location.pathname || '';
+    var search = window.location.search || '';
+    // Un lien de carte/invitation a un chemin (ex. /i/<token>). Si présent → on
+    // propose d'OUVRIR l'app (scheme myyn://) pour réclamer la carte ; sinon page d'accueil.
+    if (path && path !== '/' && path.length > 1) {
+      var deep = 'myyn:/' + path + search; // ex. /i/abc -> myyn://i/abc
+      var openBtn = document.getElementById('openBtn');
+      var installBtn = document.getElementById('installBtn');
+      openBtn.setAttribute('href', deep);
+      openBtn.textContent = 'Ouvrir dans Myyn';
+      installBtn.style.display = 'inline-block';
+      document.getElementById('note').innerHTML = "Si l'app ne s'ouvre pas, c'est que tu ne l'as pas encore — installe-la, puis rouvre ce lien.";
+    }
+  })();
+</script>
 </body>
 </html>
