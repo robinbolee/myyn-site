@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.myyn.app",
+      "sha256_cert_fingerprints": [
+        "03:EF:12:24:6C:A0:F7:FB:DC:A2:C9:64:3A:65:3D:2D:5F:4C:BB:57:63:EB:C8:58:87:A0:C9:D2:AB:62:D3:F8"
+      ]
+    }
+  }
+]
