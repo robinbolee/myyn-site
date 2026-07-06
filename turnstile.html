@@ -5,38 +5,75 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Vérification — Myyn</title>
 <style>
-  /* Fond crème Myyn : la page est rendue dans une WebView de l'app (challenge
-     interactif éventuel) — elle doit rester sobre et charte-compliant. */
-  html, body { margin: 0; height: 100%; background: #FBF6EC; }
+  html, body { margin: 0; height: 100%; background: #FBF6EC; font-family: -apple-system, system-ui, sans-serif; }
   body { display: flex; align-items: center; justify-content: center; }
+  #dbg { position: fixed; top: 8px; left: 8px; right: 8px; font-size: 12px; color: #6B6354; white-space: pre; }
 </style>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onTs" async defer></script>
 </head>
 <body>
 <div id="ts"></div>
+<pre id="dbg"></pre>
 <script>
-  // Pont WebView → app (react-native-webview). Hors app : no-op (page testable
-  // dans un navigateur : le token s'affiche en console).
+  // Params : sitekey ; exec=1 → mode EXECUTE (widget pré-rendu, token à la
+  // demande via window.__myynExec) ; dbg=1 → timing visible à l'écran.
+  var P = new URLSearchParams(location.search);
+  var EXEC = P.get('exec') === '1';
+  var DBG = P.get('dbg') === '1';
+  var T0 = (window.performance && performance.now) ? performance.now() : Date.now();
+  var widgetId = null, ready = false, execStart = 0;
+
+  function now() { return (window.performance && performance.now) ? performance.now() : Date.now(); }
   function post(m) {
     try {
       if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify(m));
-      else console.log('[turnstile]', m);
+      else console.log('[turnstile]', JSON.stringify(m));
     } catch (e) {}
   }
+  // Timing par PHASE (ms depuis le chargement de la page) → observabilité device.
+  function mark(phase) {
+    var ms = Math.round(now() - T0);
+    post({ type: 'timing', phase: phase, ms: ms });
+    if (DBG) document.getElementById('dbg').textContent += phase + ' : ' + ms + ' ms\n';
+  }
+
   function onTs() {
-    var p = new URLSearchParams(location.search);
-    turnstile.render('#ts', {
-      sitekey: p.get('sitekey') || '0x4AAAAAADwCjePx_ThcDY0x',
-      // Managed : Cloudflare décide ; l'app est prévenue si une interaction
-      // devient nécessaire (elle rend alors la WebView visible).
+    mark('api_loaded'); // api.js Cloudflare chargé + exécuté
+    var opts = {
+      sitekey: P.get('sitekey') || '0x4AAAAAADwCjePx_ThcDY0x',
       'before-interactive-callback': function () { post({ type: 'interactive' }); },
-      callback: function (t) { post({ type: 'token', token: t }); },
+      callback: function (t) {
+        mark('token'); // token obtenu
+        if (execStart) post({ type: 'exec_ms', ms: Math.round(now() - execStart) });
+        post({ type: 'token', token: t });
+      },
       'error-callback': function (c) { post({ type: 'error', code: String(c || '') }); return true; },
       'expired-callback': function () { post({ type: 'expired' }); },
       theme: 'light',
       appearance: 'always'
-    });
+    };
+    // EXECUTE : le widget se PRÉ-REND (charge l'iframe) sans lancer le challenge ;
+    // on déclenche la résolution à la demande → dissocie le coût de chargement
+    // (lent, fait tôt) de la génération du token (rapide, au tap).
+    if (EXEC) opts.execution = 'execute';
+    widgetId = turnstile.render('#ts', opts);
+    mark('rendered'); // widget rendu (prêt à exécuter en mode execute)
+    if (EXEC) { ready = true; post({ type: 'ready' }); }
   }
+
+  // Appelé par l'app (react-native-webview injectJavaScript) pour lancer la
+  // résolution en mode execute. Idempotent tant que le token n'est pas revenu.
+  window.__myynExec = function () {
+    if (!EXEC || !widgetId) return;
+    execStart = now();
+    mark('exec_called');
+    try { turnstile.execute(widgetId); } catch (e) { post({ type: 'error', code: 'exec' }); }
+  };
+  // Permet à l'app de re-préparer un token frais après usage (jeton à usage unique).
+  window.__myynReset = function () {
+    if (!widgetId) return;
+    try { turnstile.reset(widgetId); } catch (e) {}
+  };
 </script>
 </body>
 </html>
