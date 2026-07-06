@@ -21,7 +21,7 @@
   var EXEC = P.get('exec') === '1';
   var DBG = P.get('dbg') === '1';
   var T0 = (window.performance && performance.now) ? performance.now() : Date.now();
-  var widgetId = null, ready = false, execStart = 0;
+  var widgetId = null, ready = false, execStart = 0, executing = false;
 
   function now() { return (window.performance && performance.now) ? performance.now() : Date.now(); }
   function post(m) {
@@ -44,6 +44,7 @@
       'before-interactive-callback': function () { post({ type: 'interactive' }); },
       callback: function (t) {
         mark('token'); // token obtenu
+        executing = false;
         if (execStart) post({ type: 'exec_ms', ms: Math.round(now() - execStart) });
         post({ type: 'token', token: t });
       },
@@ -64,15 +65,18 @@
   // Appelé par l'app (react-native-webview injectJavaScript) pour lancer la
   // résolution en mode execute. Idempotent tant que le token n'est pas revenu.
   window.__myynExec = function () {
-    if (!EXEC || !widgetId) return;
+    if (!EXEC || !widgetId || executing) return; // idempotent : 1 challenge à la fois
+    executing = true;
     execStart = now();
     mark('exec_called');
-    try { turnstile.execute(widgetId); } catch (e) { post({ type: 'error', code: 'exec' }); }
+    try { turnstile.execute(widgetId); } catch (e) { executing = false; post({ type: 'error', code: 'exec' }); }
   };
   // Permet à l'app de re-préparer un token frais après usage (jeton à usage unique).
   window.__myynReset = function () {
     if (!widgetId) return;
+    executing = false;
     try { turnstile.reset(widgetId); } catch (e) {}
+    if (EXEC) post({ type: 'ready' }); // widget ré-armé → prêt à ré-exécuter
   };
 </script>
 </body>
