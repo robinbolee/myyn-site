@@ -29,29 +29,69 @@
   <div class="cards">🎴</div>
   <h1>Tu as reçu une carte&nbsp;💌</h1>
   <p>Myyn, c'est le jeu de cartes de ta bande : chaque jour tu offres des cartes à tes proches, et tu collectionnes celles que les autres pensent que tu mérites.</p>
-  <a class="btn" id="openBtn" href="https://testflight.apple.com/join/nwNd7mZC">Rejoindre Myyn (accès anticipé)</a>
-  <a class="btn2" id="installBtn" href="https://testflight.apple.com/join/nwNd7mZC" style="display:none">Pas encore l'app ? Installer Myyn →</a>
-  <div class="note" id="note">Myyn est en accès anticipé via <strong>TestFlight</strong>.<br>Installe l'app TestFlight (gratuite, Apple), puis Myyn.</div>
+  <a class="btn" id="primaryBtn" href="https://apps.apple.com/app/id6782846530">Installer Myyn</a>
+  <a class="btn2" id="secondaryBtn" href="#" style="display:none"></a>
+  <div class="note" id="note">Installe Myyn, puis rouvre ce lien pour récupérer ta carte.</div>
   <div class="foot">
-    <a href="https://robinbolee.github.io/myyn-legal/confidentialite.html">Confidentialité</a> ·
-    <a href="https://robinbolee.github.io/myyn-legal/cgu.html">CGU</a> ·
-    <a href="https://robinbolee.github.io/myyn-legal/mentions-legales.html">Mentions légales</a>
+    <a href="https://myyn.app/confidentialite.html">Confidentialité</a> ·
+    <a href="https://myyn.app/cgu.html">CGU</a> ·
+    <a href="https://myyn.app/mentions-legales.html">Mentions légales</a>
   </div>
 </div>
 <script>
   (function(){
+    // Stores publics (l'app est publiée : App Store live, Play com.myyn.app).
+    var STORE = {
+      ios:     'https://apps.apple.com/app/id6782846530',
+      android: 'https://play.google.com/store/apps/details?id=com.myyn.app'
+    };
+    // --- Détection d'OS (iPadOS 13+ se fait passer pour un Mac → test tactile) ---
+    var ua = navigator.userAgent || navigator.vendor || '';
+    var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+                (/Macintosh/.test(ua) && typeof document !== 'undefined' && 'ontouchend' in document);
+    var isAndroid = /android/i.test(ua);
+    var os = isIOS ? 'ios' : (isAndroid ? 'android' : 'desktop');
+
+    // Un lien d'invitation a un chemin (ex. /i/<code>). Si l'app est installée,
+    // l'OS l'ouvre DIRECTEMENT via Universal/App Link (cette page n'est alors pas
+    // affichée). Si on est ici, l'app n'est probablement pas installée → store.
     var path = window.location.pathname || '';
     var search = window.location.search || '';
-    // Un lien de carte/invitation a un chemin (ex. /i/<token>). Si présent → on
-    // propose d'OUVRIR l'app (scheme myyn://) pour réclamer la carte ; sinon page d'accueil.
-    if (path && path !== '/' && path.length > 1) {
-      var deep = 'myyn:/' + path + search; // ex. /i/abc -> myyn://i/abc
-      var openBtn = document.getElementById('openBtn');
-      var installBtn = document.getElementById('installBtn');
-      openBtn.setAttribute('href', deep);
-      openBtn.textContent = 'Ouvrir dans Myyn';
-      installBtn.style.display = 'inline-block';
-      document.getElementById('note').innerHTML = "Si l'app ne s'ouvre pas, c'est que tu ne l'as pas encore — installe-la, puis rouvre ce lien.";
+    var isInvite = path && path !== '/' && path.length > 1;
+    var deep = isInvite ? ('myyn:/' + path + search) : null; // /i/abc -> myyn://i/abc
+
+    var primary = document.getElementById('primaryBtn');
+    var secondary = document.getElementById('secondaryBtn');
+    var note = document.getElementById('note');
+
+    if (os === 'desktop') {
+      // Sur ordi : pas d'installation directe → proposer les deux stores.
+      primary.setAttribute('href', STORE.ios);
+      primary.textContent = 'Voir Myyn sur l’App Store';
+      secondary.setAttribute('href', STORE.android);
+      secondary.textContent = 'Ou sur Google Play →';
+      secondary.style.display = 'inline-block';
+      note.innerHTML = 'Ouvre ce lien depuis ton téléphone pour installer Myyn en un tap.';
+      return;
+    }
+
+    // Mobile : bouton principal = le bon store.
+    primary.setAttribute('href', STORE[os]);
+    primary.textContent = 'Installer Myyn';
+
+    if (isInvite) {
+      // Bonus « j'ai déjà l'app » → tentative d'ouverture via le scheme.
+      // Déclenché par l'utilisateur (pas d'auto-fire) pour éviter le dialogue
+      // d'erreur iOS quand l'app n'est pas installée.
+      secondary.textContent = 'J’ai déjà Myyn → ouvrir ma carte';
+      secondary.style.display = 'inline-block';
+      secondary.addEventListener('click', function(e){
+        e.preventDefault();
+        window.location.href = deep;
+      });
+      note.innerHTML = 'Installe Myyn, puis rouvre ce lien pour récupérer ta carte.';
+    } else {
+      note.innerHTML = 'Chaque jour, offre des cartes à tes proches et collectionne les leurs.';
     }
   })();
 </script>

@@ -17,6 +17,7 @@
   h1{font-family:Georgia,serif;font-size:1.55rem;margin:0 0 10px;line-height:1.25;}
   p{color:var(--taupe);font-size:1.05rem;margin:0 0 28px;}
   .btn{display:inline-block;background:var(--coral);color:#fff;text-decoration:none;font-weight:600;padding:15px 30px;border-radius:30px;font-size:1.05rem;}
+  .btn2{display:inline-block;margin-top:14px;color:var(--coral);text-decoration:none;font-weight:600;font-size:.95rem;}
   .note{margin-top:22px;font-size:.85rem;color:var(--taupe);}
   .foot{margin-top:40px;font-size:.8rem;}
   .foot a{color:var(--coral);text-decoration:none;}
@@ -26,15 +27,45 @@
 <div class="wrap">
   <div class="logo">Myyn</div>
   <div class="cards">🎴</div>
-  <h1>Tu as reçu une carte&nbsp;💌</h1>
-  <p>Myyn, c'est le jeu de cartes de ta bande : chaque jour tu offres des cartes à tes proches, et tu collectionnes celles que les autres pensent que tu mérites.</p>
-  <a class="btn" href="https://testflight.apple.com/join/nwNd7mZC">Rejoindre Myyn (accès anticipé)</a>
-  <div class="note">Myyn est en accès anticipé via <strong>TestFlight</strong>.<br>Installe l'app TestFlight (gratuite, Apple), puis Myyn.</div>
+  <h1>Le jeu de cartes de ta bande</h1>
+  <p>Chaque jour, ouvre un pack, offre des cartes à tes proches, et collectionne celles que les autres pensent que tu mérites.</p>
+  <a class="btn" id="primaryBtn" href="https://apps.apple.com/app/id6782846530">Installer Myyn</a>
+  <a class="btn2" id="secondaryBtn" href="#" style="display:none"></a>
+  <div class="note" id="note">Disponible sur iPhone et Android.</div>
   <div class="foot">
-    <a href="https://robinbolee.github.io/myyn-legal/confidentialite.html">Confidentialité</a> ·
-    <a href="https://robinbolee.github.io/myyn-legal/cgu.html">CGU</a> ·
-    <a href="https://robinbolee.github.io/myyn-legal/mentions-legales.html">Mentions légales</a>
+    <a href="https://myyn.app/confidentialite.html">Confidentialité</a> ·
+    <a href="https://myyn.app/cgu.html">CGU</a> ·
+    <a href="https://myyn.app/mentions-legales.html">Mentions légales</a>
   </div>
 </div>
+<script>
+  (function(){
+    var STORE = {
+      ios:     'https://apps.apple.com/app/id6782846530',
+      android: 'https://play.google.com/store/apps/details?id=com.myyn.app'
+    };
+    var ua = navigator.userAgent || navigator.vendor || '';
+    var isIOS = /iPad|iPhone|iPod/.test(ua) ||
+                (/Macintosh/.test(ua) && typeof document !== 'undefined' && 'ontouchend' in document);
+    var isAndroid = /android/i.test(ua);
+    var os = isIOS ? 'ios' : (isAndroid ? 'android' : 'desktop');
+
+    var primary = document.getElementById('primaryBtn');
+    var secondary = document.getElementById('secondaryBtn');
+    var note = document.getElementById('note');
+
+    if (os === 'desktop') {
+      primary.setAttribute('href', STORE.ios);
+      primary.textContent = 'Voir Myyn sur l’App Store';
+      secondary.setAttribute('href', STORE.android);
+      secondary.textContent = 'Ou sur Google Play →';
+      secondary.style.display = 'inline-block';
+      note.innerHTML = 'Ouvre myyn.app depuis ton téléphone pour installer l’app en un tap.';
+    } else {
+      primary.setAttribute('href', STORE[os]);
+      primary.textContent = 'Installer Myyn';
+    }
+  })();
+</script>
 </body>
 </html>
