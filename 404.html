@@ -5,33 +5,62 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Myyn — Le jeu de cartes de ta bande</title>
 <meta property="og:title" content="Tu as reçu une carte sur Myyn">
-<meta property="og:description" content="Chaque jour, offre des cartes à ton entourage et collectionne celles que les autres pensent que tu mérites.">
+<meta property="og:description" content="Quelqu'un a mis un nom sur ce que tu es pour lui. Installe Myyn pour retourner ta carte.">
 <meta property="og:type" content="website">
+<meta property="og:image" content="https://myyn.app/og-invite.png?v=1">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://myyn.app/og-invite.png?v=1">
 <style>
-  :root{--cream:#FBF6EC;--ink:#2A2218;--taupe:#6B6152;--coral:#E07856;--border:#E7DECB;}
+  :root{--cream:#FBF6EC;--ink:#2A2218;--taupe:#6B6152;--coral:#E07856;--border:#E7DECB;--cardink:#15110B;}
   *{box-sizing:border-box;}
   body{margin:0;background:var(--cream);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.6;display:flex;min-height:100vh;align-items:center;justify-content:center;text-align:center;}
-  .wrap{max-width:440px;padding:40px 26px;}
-  .logo{font-family:Georgia,"Times New Roman",serif;font-size:2.6rem;font-weight:700;letter-spacing:-.5px;margin:0 0 6px;}
-  .cards{font-size:2rem;margin-bottom:18px;}
-  h1{font-family:Georgia,serif;font-size:1.55rem;margin:0 0 10px;line-height:1.25;}
-  p{color:var(--taupe);font-size:1.05rem;margin:0 0 28px;}
+  .wrap{max-width:440px;padding:36px 26px;}
+  .logo{font-family:Georgia,"Times New Roman",serif;font-size:2.2rem;font-weight:700;letter-spacing:-.5px;margin:0 0 14px;}
+  h1{font-family:Georgia,serif;font-size:1.55rem;margin:14px 0 8px;line-height:1.25;}
+  p{color:var(--taupe);font-size:1.02rem;margin:0 0 22px;}
   .btn{display:inline-block;background:var(--coral);color:#fff;text-decoration:none;font-weight:600;padding:15px 30px;border-radius:30px;font-size:1.05rem;}
   .btn2{display:inline-block;margin-top:14px;color:var(--coral);text-decoration:none;font-weight:600;font-size:.95rem;}
-  .note{margin-top:22px;font-size:.85rem;color:var(--taupe);}
-  .foot{margin-top:40px;font-size:.8rem;}
+  .micro{margin-top:10px;font-size:.9rem;color:var(--taupe);}
+  .reassure{margin-top:18px;font-size:.85rem;color:var(--taupe);}
+  .note{margin-top:6px;font-size:.8rem;color:var(--taupe);opacity:.85;}
+  .foot{margin-top:34px;font-size:.8rem;}
   .foot a{color:var(--coral);text-decoration:none;}
+  .cards{font-size:2rem;margin:6px 0 2px;}
+  .cardStage{display:none;justify-content:center;margin:10px 0 4px;}
+  .liseret{padding:3px;border-radius:18px;background:#B4A98F;animation:sway 4.5s ease-in-out infinite;transform-origin:50% 115%;}
+  .r-rare{background:linear-gradient(135deg,#9AA0A6,#E8ECEF,#9AA0A6);}
+  .r-epique{background:linear-gradient(135deg,#8C5E26,#F4D596,#9A6A2A);}
+  .r-legende{background:linear-gradient(135deg,#7FE0CE,#8E9AF0,#D98AE0,#F8CE7A);}
+  @keyframes sway{0%,100%{transform:rotate(-3deg);}50%{transform:rotate(3deg);}}
+  @media (prefers-reduced-motion: reduce){.liseret{animation:none;}}
+  .cardback{width:150px;height:210px;border-radius:15px;background:var(--cardink);position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+  .cardback .inner{position:absolute;top:6px;left:6px;right:6px;bottom:6px;border:1px solid rgba(251,246,236,.18);border-radius:11px;}
+  .cardback .brand{font-family:Georgia,serif;font-weight:600;color:rgba(251,246,236,.92);font-size:24px;letter-spacing:.5px;}
+  .cardback .spark{width:22px;height:2px;border-radius:2px;background:var(--coral);margin-top:8px;opacity:.85;}
+  .dots{margin-top:8px;font-size:.8rem;letter-spacing:3px;color:var(--taupe);}
+  .notehint{display:none;margin:0 0 6px;font-size:.95rem;color:var(--ink);}
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="logo">Myyn</div>
-  <div class="cards">🎴</div>
-  <h1>Tu as reçu une carte&nbsp;💌</h1>
-  <p>Myyn, c'est le jeu de cartes de ta bande : chaque jour tu offres des cartes à tes proches, et tu collectionnes celles que les autres pensent que tu mérites.</p>
+  <div class="cards" id="emoji">🎴</div>
+  <div class="cardStage" id="cardStage">
+    <div class="liseret" id="liseret">
+      <div class="cardback"><div class="inner"></div><div class="brand">Myyn</div><div class="spark"></div></div>
+    </div>
+  </div>
+  <div class="dots" id="dots" style="display:none"></div>
+  <h1 id="title">Tu as reçu une carte&nbsp;💌</h1>
+  <p class="notehint" id="noteHint">✍️ Avec un mot rien que pour toi</p>
+  <p id="pitch">Myyn, c'est le jeu de cartes de ta bande : chaque jour tu offres des cartes à tes proches, et tu collectionnes celles que les autres pensent que tu mérites.</p>
   <a class="btn" id="primaryBtn" href="https://apps.apple.com/app/id6782846530">Installer Myyn</a>
+  <div class="micro" id="micro" style="display:none">Installe Myyn pour la retourner — ta carte t’attend.</div>
   <a class="btn2" id="secondaryBtn" href="#" style="display:none"></a>
-  <div class="note" id="note">Installe Myyn, puis rouvre ce lien pour récupérer ta carte.</div>
+  <div class="reassure">Gratuit · iPhone &amp; Android · le jeu de cartes de ta bande</div>
+  <div class="note" id="note">Ta carte sera là à l’ouverture de l’app. <span style="opacity:.8">(si besoin, rouvre ce lien après l’installation)</span></div>
   <div class="foot">
     <a href="https://myyn.app/confidentialite.html">Confidentialité</a> ·
     <a href="https://myyn.app/cgu.html">CGU</a> ·
@@ -39,60 +68,112 @@
   </div>
 </div>
 <script>
+!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once identify set_config opt_in_capturing opt_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+posthog.init('phc_qQ2LNikESE6Speeg2q4JiP6EzcCiqaUPDhEefkoXBLPC',{api_host:'https://eu.i.posthog.com',persistence:'memory',autocapture:false,capture_pageview:false,person_profiles:'identified_only'});
+function ph(ev, props){ try { posthog.capture(ev, props, { transport: 'sendBeacon' }); } catch (e) {} }
+</script>
+<script>
   (function(){
-    // Stores publics (l'app est publiée : App Store live, Play com.myyn.app).
     var STORE = {
       ios:     'https://apps.apple.com/app/id6782846530',
       android: 'https://play.google.com/store/apps/details?id=com.myyn.app'
     };
-    // --- Détection d'OS (iPadOS 13+ se fait passer pour un Mac → test tactile) ---
     var ua = navigator.userAgent || navigator.vendor || '';
     var isIOS = /iPad|iPhone|iPod/.test(ua) ||
                 (/Macintosh/.test(ua) && typeof document !== 'undefined' && 'ontouchend' in document);
     var isAndroid = /android/i.test(ua);
     var os = isIOS ? 'ios' : (isAndroid ? 'android' : 'desktop');
 
-    // Un lien d'invitation a un chemin (ex. /i/<code>). Si l'app est installée,
-    // l'OS l'ouvre DIRECTEMENT via Universal/App Link (cette page n'est alors pas
-    // affichée). Si on est ici, l'app n'est probablement pas installée → store.
+    // Lien d'invitation : /i/<token> (le fallback 404 de GitHub Pages sert ces chemins).
     var path = window.location.pathname || '';
-    var search = window.location.search || '';
-    var isInvite = path && path !== '/' && path.length > 1;
-    var deep = isInvite ? ('myyn:/' + path + search) : null; // /i/abc -> myyn://i/abc
+    var m = /\/i\/([A-Za-z0-9]+)/.exec(path);
+    var token = m ? m[1] : null;
+    var deep = token ? ('myyn://i/' + token) : null;
 
-    var primary = document.getElementById('primaryBtn');
-    var secondary = document.getElementById('secondaryBtn');
-    var note = document.getElementById('note');
+    var el = function(id){ return document.getElementById(id); };
+    var primary = el('primaryBtn'), secondary = el('secondaryBtn'), note = el('note');
+
+    ph('landing_viewed', { page: token ? 'invite' : 'home', os: os, has_token: Boolean(token) });
+
+    // ── CTA stores (détection d'OS conservée) ──────────────────────────────
+    function armStoreClick(btn, store){
+      btn.addEventListener('click', function(){
+        // Clipboard handoff : le token voyage jusqu'au 1er lancement de l'app.
+        // Ne JAMAIS bloquer la navigation si l'API échoue/absente.
+        if (token && navigator.clipboard && navigator.clipboard.writeText) {
+          try { navigator.clipboard.writeText('myyn-invite:' + token).catch(function(){}); } catch (e) {}
+        }
+        ph('landing_store_clicked', { os: os, store: store, has_token: Boolean(token) });
+      });
+    }
 
     if (os === 'desktop') {
-      // Sur ordi : pas d'installation directe → proposer les deux stores.
       primary.setAttribute('href', STORE.ios);
       primary.textContent = 'Voir Myyn sur l’App Store';
+      armStoreClick(primary, 'appstore');
       secondary.setAttribute('href', STORE.android);
       secondary.textContent = 'Ou sur Google Play →';
       secondary.style.display = 'inline-block';
+      armStoreClick(secondary, 'play');
       note.innerHTML = 'Ouvre ce lien depuis ton téléphone pour installer Myyn en un tap.';
-      return;
-    }
-
-    // Mobile : bouton principal = le bon store.
-    primary.setAttribute('href', STORE[os]);
-    primary.textContent = 'Installer Myyn';
-
-    if (isInvite) {
-      // Bonus « j'ai déjà l'app » → tentative d'ouverture via le scheme.
-      // Déclenché par l'utilisateur (pas d'auto-fire) pour éviter le dialogue
-      // d'erreur iOS quand l'app n'est pas installée.
-      secondary.textContent = 'J’ai déjà Myyn → ouvrir ma carte';
-      secondary.style.display = 'inline-block';
-      secondary.addEventListener('click', function(e){
-        e.preventDefault();
-        window.location.href = deep;
-      });
-      note.innerHTML = 'Installe Myyn, puis rouvre ce lien pour récupérer ta carte.';
     } else {
-      note.innerHTML = 'Chaque jour, offre des cartes à tes proches et collectionne les leurs.';
+      primary.setAttribute('href', STORE[os]);
+      primary.textContent = 'Installer Myyn';
+      armStoreClick(primary, os === 'ios' ? 'appstore' : 'play');
+      if (token) {
+        secondary.textContent = 'J’ai déjà Myyn → ouvrir ma carte';
+        secondary.style.display = 'inline-block';
+        secondary.addEventListener('click', function(e){
+          e.preventDefault();
+          ph('landing_open_app_clicked', {});
+          window.location.href = deep;
+        });
+      } else {
+        note.innerHTML = 'Chaque jour, offre des cartes à tes proches et collectionne les leurs.';
+      }
     }
+
+    if (!token) return;
+
+    // ── Révélation du don (ELMR) : prénom + carte face cachée + liseré rareté ──
+    var DOTS = { commune: '●○○○', rare: '●●○○', epique: '●●●○', legende: '●●●●' };
+    function renderGift(row){
+      el('title').textContent = (row.giver_name || 'Quelqu’un') + ' t’a choisi une carte';
+      el('emoji').style.display = 'none';
+      el('cardStage').style.display = 'flex';
+      var r = String(row.rarity || 'commune');
+      if (r === 'rare' || r === 'epique' || r === 'legende') el('liseret').classList.add('r-' + r);
+      var dots = el('dots'); dots.textContent = DOTS[r] || DOTS.commune; dots.style.display = 'block';
+      if (row.note) el('noteHint').style.display = 'block';
+      el('pitch').style.display = 'none';
+      el('micro').style.display = 'block';
+    }
+    window.__renderGift = renderGift; // hook de QA (aperçu sans réseau)
+
+    // Fetch direct de la RPC publique (aucun secret : clé publishable). Timeout
+    // court : si Supabase ne répond pas, la page générique reste utilisable.
+    var ctrl = new AbortController();
+    var timer = setTimeout(function(){ ctrl.abort(); }, 4000);
+    fetch('https://qybqomcesneevrkiqxeh.supabase.co/rest/v1/rpc/get_gift_by_token', {
+      method: 'POST',
+      headers: {
+        'apikey': 'sb_publishable_5JaK9tMX2hDFqCKoQoeRoA_jKShzP1p',
+        'Authorization': 'Bearer sb_publishable_5JaK9tMX2hDFqCKoQoeRoA_jKShzP1p',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ p_token: token }),
+      signal: ctrl.signal
+    }).then(function(res){ return res.json(); }).then(function(data){
+      clearTimeout(timer);
+      var row = Array.isArray(data) ? data[0] : data;
+      // 'pending' = carte envoyée, pas encore gardée → la seule où « elle t'attend » est vrai.
+      var found = Boolean(row && row.card_slug && row.status === 'pending');
+      ph('landing_gift_loaded', { found: found, rarity: found ? row.rarity : undefined, has_note: found ? Boolean(row.note) : undefined });
+      if (found) renderGift(row);
+    }).catch(function(){
+      clearTimeout(timer);
+      ph('landing_gift_loaded', { found: false });
+    });
   })();
 </script>
 </body>
