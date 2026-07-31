@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Myyn — Le jeu de cartes de ta bande</title>
-<meta property="og:title" content="Tu as reçu une carte sur Myyn">
-<meta property="og:description" content="Quelqu'un a mis un nom sur ce que tu es pour lui. Installe Myyn pour retourner ta carte.">
+<meta property="og:title" content="Quelqu'un a pensé à toi sur Myyn">
+<meta property="og:description" content="Myyn, c'est le jeu de cartes de ta bande : on offre une carte à ceux qui comptent, et on collectionne celles qu'on nous donne.">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://myyn.app/og-invite.png?v=1">
 <meta property="og:image:width" content="1200">
@@ -53,14 +53,18 @@
     </div>
   </div>
   <div class="dots" id="dots" style="display:none"></div>
-  <h1 id="title">Tu as reçu une carte&nbsp;💌</h1>
+  <!-- Titre NEUTRE et VRAI dans les deux cas (don ET invitation). Il n'est
+       spécialisé qu'une fois qu'on sait de quoi il s'agit — voir plus bas. -->
+  <h1 id="title">Quelqu'un a pensé à toi&nbsp;🤍</h1>
   <p class="notehint" id="noteHint">✍️ Avec un mot rien que pour toi</p>
   <p id="pitch">Myyn, c'est le jeu de cartes de ta bande : chaque jour tu offres des cartes à tes proches, et tu collectionnes celles que les autres pensent que tu mérites.</p>
   <a class="btn" id="primaryBtn" href="https://apps.apple.com/app/id6782846530">Installer Myyn</a>
   <div class="micro" id="micro" style="display:none">Installe Myyn pour la retourner — ta carte t’attend.</div>
   <a class="btn2" id="secondaryBtn" href="#" style="display:none"></a>
   <div class="reassure">Gratuit · iPhone &amp; Android · le jeu de cartes de ta bande</div>
-  <div class="note" id="note">Ta carte sera là à l’ouverture de l’app. <span style="opacity:.8">(si besoin, rouvre ce lien après l’installation)</span></div>
+  <!-- Vide par défaut : ne JAMAIS promettre une carte tant qu'on n'en a pas
+       confirmé une. Rempli par le chemin don, le chemin invitation, ou l'OS. -->
+  <div class="note" id="note"></div>
   <div class="foot">
     <a href="https://myyn.app/confidentialite.html">Confidentialité</a> ·
     <a href="https://myyn.app/cgu.html">CGU</a> ·
@@ -78,13 +82,19 @@ function ph(ev, props){ try { posthog.capture(ev, props, { transport: 'sendBeaco
       ios:     'https://apps.apple.com/app/id6782846530',
       android: 'https://play.google.com/store/apps/details?id=com.myyn.app'
     };
+    var SUPA = 'https://qybqomcesneevrkiqxeh.supabase.co/rest/v1/rpc/';
+    var KEY  = 'sb_publishable_5JaK9tMX2hDFqCKoQoeRoA_jKShzP1p';
+
     var ua = navigator.userAgent || navigator.vendor || '';
     var isIOS = /iPad|iPhone|iPod/.test(ua) ||
                 (/Macintosh/.test(ua) && typeof document !== 'undefined' && 'ontouchend' in document);
     var isAndroid = /android/i.test(ua);
     var os = isIOS ? 'ios' : (isAndroid ? 'android' : 'desktop');
+    var isDesktop = os === 'desktop';
 
-    // Lien d'invitation : /i/<token> (le fallback 404 de GitHub Pages sert ces chemins).
+    // Lien : /i/<token> (le fallback 404 de GitHub Pages sert ces chemins).
+    // Le MÊME format sert pour un DON (token long) et pour une INVITATION
+    // (code court). On ne peut pas les distinguer sur la forme → on demande.
     var path = window.location.pathname || '';
     var m = /\/i\/([A-Za-z0-9]+)/.exec(path);
     var token = m ? m[1] : null;
@@ -107,7 +117,7 @@ function ph(ev, props){ try { posthog.capture(ev, props, { transport: 'sendBeaco
       });
     }
 
-    if (os === 'desktop') {
+    if (isDesktop) {
       primary.setAttribute('href', STORE.ios);
       primary.textContent = 'Voir Myyn sur l’App Store';
       armStoreClick(primary, 'appstore');
@@ -121,7 +131,9 @@ function ph(ev, props){ try { posthog.capture(ev, props, { transport: 'sendBeaco
       primary.textContent = 'Installer Myyn';
       armStoreClick(primary, os === 'ios' ? 'appstore' : 'play');
       if (token) {
-        secondary.textContent = 'J’ai déjà Myyn → ouvrir ma carte';
+        // Libellé NEUTRE tant qu'on ne sait pas ce qu'il y a derrière le token.
+        // Spécialisé en « ouvrir ma carte » une fois le don confirmé.
+        secondary.textContent = 'J’ai déjà Myyn → ouvrir l’app';
         secondary.style.display = 'inline-block';
         secondary.addEventListener('click', function(e){
           e.preventDefault();
@@ -135,7 +147,18 @@ function ph(ev, props){ try { posthog.capture(ev, props, { transport: 'sendBeaco
 
     if (!token) return;
 
-    // ── Révélation du don (ELMR) : prénom + carte face cachée + liseré rareté ──
+    function post(fn, body, ms){
+      var ctrl = new AbortController();
+      var timer = setTimeout(function(){ ctrl.abort(); }, ms || 4000);
+      return fetch(SUPA + fn, {
+        method: 'POST',
+        headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: ctrl.signal
+      }).then(function(res){ clearTimeout(timer); return res.json(); });
+    }
+
+    // ── Cas 1 : un DON ─────────────────────────────────────────────────────
     var DOTS = { commune: '●○○○', rare: '●●○○', epique: '●●●○', legende: '●●●●' };
     function renderGift(row){
       el('title').textContent = (row.giver_name || 'Quelqu’un') + ' t’a choisi une carte';
@@ -147,32 +170,48 @@ function ph(ev, props){ try { posthog.capture(ev, props, { transport: 'sendBeaco
       if (row.note) el('noteHint').style.display = 'block';
       el('pitch').style.display = 'none';
       el('micro').style.display = 'block';
+      if (!isDesktop) {
+        secondary.textContent = 'J’ai déjà Myyn → ouvrir ma carte';
+        note.innerHTML = 'Ta carte sera là à l’ouverture de l’app. <span style="opacity:.8">(si besoin, rouvre ce lien après l’installation)</span>';
+      }
     }
     window.__renderGift = renderGift; // hook de QA (aperçu sans réseau)
 
-    // Fetch direct de la RPC publique (aucun secret : clé publishable). Timeout
-    // court : si Supabase ne répond pas, la page générique reste utilisable.
-    var ctrl = new AbortController();
-    var timer = setTimeout(function(){ ctrl.abort(); }, 4000);
-    fetch('https://qybqomcesneevrkiqxeh.supabase.co/rest/v1/rpc/get_gift_by_token', {
-      method: 'POST',
-      headers: {
-        'apikey': 'sb_publishable_5JaK9tMX2hDFqCKoQoeRoA_jKShzP1p',
-        'Authorization': 'Bearer sb_publishable_5JaK9tMX2hDFqCKoQoeRoA_jKShzP1p',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ p_token: token }),
-      signal: ctrl.signal
-    }).then(function(res){ return res.json(); }).then(function(data){
-      clearTimeout(timer);
+    // ── Cas 2 : une INVITATION ─────────────────────────────────────────────
+    // ⚠️ On appelle get_invite_by_token (LECTURE SEULE) et surtout PAS
+    // resolve_invite, qui marque l'invitation comme « converted » : l'appeler
+    // ici gonflerait le K-factor à chaque visite de la page.
+    function renderInvite(name){
+      el('title').textContent = (name || 'Quelqu’un') + ' t’invite sur Myyn';
+      if (!isDesktop) {
+        note.innerHTML = 'Installe l’app et retrouve ' + (name ? '<strong>' + name + '</strong>' : 'ta bande') + ' dans ta tribu.';
+      }
+    }
+    window.__renderInvite = renderInvite; // hook de QA
+
+    function lookupInvite(){
+      return post('get_invite_by_token', { p_token: token }).then(function(data){
+        var row = Array.isArray(data) ? data[0] : data;
+        var name = row && row.inviter_name ? String(row.inviter_name) : null;
+        ph('landing_invite_loaded', { found: Boolean(row), named: Boolean(name) });
+        // Trouvé mais sans prénom → on reste sur le titre neutre, qui est vrai.
+        if (row) renderInvite(name);
+      }).catch(function(){
+        ph('landing_invite_loaded', { found: false });
+      });
+    }
+
+    // Un don d'abord (cas le plus riche), une invitation ensuite.
+    post('get_gift_by_token', { p_token: token }).then(function(data){
       var row = Array.isArray(data) ? data[0] : data;
       // 'pending' = carte envoyée, pas encore gardée → la seule où « elle t'attend » est vrai.
       var found = Boolean(row && row.card_slug && row.status === 'pending');
       ph('landing_gift_loaded', { found: found, rarity: found ? row.rarity : undefined, has_note: found ? Boolean(row.note) : undefined });
-      if (found) renderGift(row);
+      if (found) { renderGift(row); return; }
+      return lookupInvite();
     }).catch(function(){
-      clearTimeout(timer);
       ph('landing_gift_loaded', { found: false });
+      return lookupInvite();
     });
   })();
 </script>
