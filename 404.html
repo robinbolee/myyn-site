@@ -201,6 +201,30 @@ function ph(ev, props){ try { posthog.capture(ev, props, { transport: 'sendBeaco
       });
     }
 
+    // ── Mesure d'ouverture ────────────────────────────────────────────────
+    // TIRÉE ET OUBLIÉE : aucun `.then`, aucun `await`, rien qui touche à
+    // l'affichage. Si l'appel échoue, expire ou part dans le vide, la page
+    // s'affiche exactement pareil — c'est une mesure, pas une fonctionnalité.
+    //
+    // Elle n'attend PAS get_gift_by_token : la réponse ne lui sert à rien. Un
+    // token d'invitation ne correspond à aucune ligne de `gifts`, la RPC ne
+    // fait alors rien et ne le dit pas.
+    //
+    // `keepalive` : l'invité tape souvent « Installer Myyn » dans la seconde.
+    // Sans ça, la navigation vers le store tue la requête et on ne compte rien.
+    //
+    // ⛔ Cette RPC écrit `link_opened_at`, JAMAIS `revealed_at` — cette
+    // dernière déclenche la notification « carte ouverte » au donneur, qui
+    // serait un mensonge ici : personne n'a encore installé l'app.
+    try {
+      fetch(SUPA + 'mark_link_opened', {
+        method: 'POST',
+        headers: { 'apikey': KEY, 'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_token: token }),
+        keepalive: true
+      }).catch(function(){});
+    } catch (e) {}
+
     // Un don d'abord (cas le plus riche), une invitation ensuite.
     post('get_gift_by_token', { p_token: token }).then(function(data){
       var row = Array.isArray(data) ? data[0] : data;
